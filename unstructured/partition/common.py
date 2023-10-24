@@ -6,17 +6,7 @@ import subprocess
 from datetime import datetime
 from io import BufferedReader, BytesIO, TextIOWrapper
 from tempfile import SpooledTemporaryFile
-from typing import (
-    IO,
-    TYPE_CHECKING,
-    Any,
-    BinaryIO,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import IO, TYPE_CHECKING, Any, BinaryIO, Dict, List, Optional, Tuple, Union
 
 import emoji
 from tabulate import tabulate
@@ -91,7 +81,7 @@ def get_last_modified_date_from_file(
     if hasattr(file, "name"):
         filename = file.name
 
-    if not filename:
+    if not filename or not os.path.exists(filename):
         return None
 
     modify_date = get_last_modified_date(filename)
@@ -255,12 +245,8 @@ def set_element_hierarchy(
                 or 0
             )
 
-            if (
-                top_element_category == element_category
-                and top_element_category_depth < element_category_depth
-            ) or (
-                top_element_category != element_category
-                and element_category in ruleset.get(top_element_category, [])
+            if (top_element_category == element_category and top_element_category_depth < element_category_depth) or (
+                top_element_category != element_category and element_category in ruleset.get(top_element_category, [])
             ):
                 parent_id = top_element.id
                 break
@@ -302,19 +288,13 @@ def _add_element_metadata(
     link_urls = [link.get("url") for link in links] if links else None
     link_texts = [link.get("text") for link in links] if links else None
     emphasized_texts = (
-        element.emphasized_texts
-        if hasattr(element, "emphasized_texts") and len(element.emphasized_texts) > 0
-        else None
+        element.emphasized_texts if hasattr(element, "emphasized_texts") and len(element.emphasized_texts) > 0 else None
     )
     emphasized_text_contents = (
-        [emphasized_text.get("text") for emphasized_text in emphasized_texts]
-        if emphasized_texts
-        else None
+        [emphasized_text.get("text") for emphasized_text in emphasized_texts] if emphasized_texts else None
     )
     emphasized_text_tags = (
-        [emphasized_text.get("tag") for emphasized_text in emphasized_texts]
-        if emphasized_texts
-        else None
+        [emphasized_text.get("tag") for emphasized_text in emphasized_texts] if emphasized_texts else None
     )
     depth = element.metadata.category_depth if element.metadata.category_depth else None
 
@@ -591,22 +571,18 @@ def document_to_element_list(
                     layout_element.text_as_html if hasattr(layout_element, "text_as_html") else None
                 )
                 try:
-                    if (
-                        isinstance(element, Title) and element.metadata.category_depth is None
-                    ) and any(el.type in ["Headline", "Subheadline"] for el in page.elements):
+                    if (isinstance(element, Title) and element.metadata.category_depth is None) and any(
+                        el.type in ["Headline", "Subheadline"] for el in page.elements
+                    ):
                         element.metadata.category_depth = 0
                 except AttributeError:
                     logger.info("HTML element instance has no attribute type")
 
                 page_elements.append(element)
                 translation_mapping.append((layout_element, element))
-            coordinates = (
-                element.metadata.coordinates.points if element.metadata.coordinates else None
-            )
+            coordinates = element.metadata.coordinates.points if element.metadata.coordinates else None
 
-            el_image_path = (
-                layout_element.image_path if hasattr(layout_element, "image_path") else None
-            )
+            el_image_path = layout_element.image_path if hasattr(layout_element, "image_path") else None
 
             _add_element_metadata(
                 element,
